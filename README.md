@@ -1,6 +1,6 @@
 # Oracle SQL Query Metric Collector
 
-Oracle SQL Query Metric Collector is a javascript utility running in [SqlCl](http://www.oracle.com/technetwork/developer-tools/sqlcl/overview/sqlcl-index-2994757.html) that can be used to run arbitrary SQL queries in a Oracle DB and writing results to standard output in CSV format. The utility runs a SQL query in defined intervals and defined number of times. It was originally developed as a probe for [Universal Metric Collector](https://github.com/rstyczynski/umc) but can be used independently. 
+Oracle SQL Query Metric Collector is a javascript utility running in [SQLcl](http://www.oracle.com/technetwork/developer-tools/sqlcl/overview/sqlcl-index-2994757.html) that can be used to run arbitrary SQL queries in a Oracle DB and writing results to standard output in CSV format. The utility runs a SQL query in defined intervals and defined number of times. It was originally developed as a probe for [Universal Metric Collector](https://github.com/rstyczynski/umc) but can be used independently. 
 
 In order to use sql-collector, you need to have the following in your system:
 
