@@ -3,6 +3,8 @@
     This script runs in SQLcl, use sql-collector script to run it
 */
 
+var VERSION = "v1.0";
+
 // various java libraries used by this script 
 var Thread = Java.type("java.lang.Thread");
 var System = Java.type("java.lang.System");
@@ -23,7 +25,7 @@ if (!sqlcDir || sqlcDir === "")
 load(sqlcDir + "/libs/ArgumentsParser.js");
 
 var programName = 
-  "Oracle SQL query metric collector";
+  "Oracle SQL query metric collector " + VERSION;
 
 var optionDef = [
   { name: 'connect',            type: String,    required: true,  desc : "DB connection string." },
