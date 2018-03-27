@@ -13,9 +13,20 @@ if ! type "sql" &> /dev/null; then
 fi
 
 # generate sql file for sqlcl to execute
-# her§edoc did not work very well for sqlcl, there was always a newline 
+# heredoc did not work very well for sqlcl, there was always a newline 
 # generated on execution which was a problem for the purpsoe of this script
-tmpfile=".sql-executor-$((1 + RANDOM % 1000)).sql"
+
+# generate unique id
+# this not really reliable
+uid=$((1 + RANDOM % 1000))
+
+# use urandom if possible 
+if [ -f /dev/urandom ]; then
+	uid=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1);
+fi
+
+# create the tmp file
+tmpfile=".sql-executor-$uid.sql"
 echo "script $sqlcDir/sql-collector.js &1" >$tmpfile
 echo "exit" >>$tmpfile
 
