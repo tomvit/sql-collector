@@ -1,0 +1,2 @@
+source env.sh
+../bin/sql-collector --connect $DB_CONNSTR --query sys-dual-test.sql --count 5 --interval 1
