@@ -32,6 +32,7 @@ var optionDef = [
   { name: 'query',              type: String,    required: true,  desc : "SQL query file." },
   { name: 'count',              type: Number,    required: true,  desc : "Number of iterations the query will run." },
   { name: 'interval',           type: Number,    required: true,  desc : "Delay in seconds betwen iterations." },
+  { name: 'delimiter',          type: String,    required: false, desc : "CSV delimiter, the default value is ','." },
   { name: 'noHeaders',                           required: false, desc : "Headers will not be written to the output." },  
   { name: 'showSQLErrors',                       required: false, desc : "SQL errors will be written to the output." },  
   { name: '#([a-zA-Z0-9_\\-\\*\\+\\.]+)',
@@ -96,9 +97,13 @@ try {
     }
 
     // global SQL params
-    runSQL("SET SQLFORMAT CSV");
     runSQL("SET SQLBLANKLINES ON");
     runSQL("SET TRIMSPOOL ON");
+    
+    if (argv.delimiter && argv.delimiter.value)
+      runSQL("SET SQLFORMAT DELIMITED " + argv.delimiter.value + ' " "');
+    else
+      runSQL("SET SQLFORMAT CSV");
 
     if (!argv.showSQLErrors && !argv.test) {
       runSQL("SET ECHO OFF");
