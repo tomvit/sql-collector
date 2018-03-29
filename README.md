@@ -50,9 +50,11 @@ $ sql-collector --connect $DB_CONNSTR --query sys-long-running-queries.sql --cou
 {"connect":{"name":"connect","value":"sys/oracle@10.0.2.2:1521:xe as sysdba","def":{"name":"connect",
 "required":true,"desc":"DB connection string.","__use":1}},"query":{"name":"query","value":"sys-long-running-queries.sql",
 "def":{"name":"query","required":true,"desc":"SQL query file.","__use":1}},"count":{"name":"count",
-"value":2,"def":{"name":"count","required":true,"desc":"Number of iterations the query will run.","__use":1}},"interval":{"name":"interval","value":2,"def":{"name":"interval","required":true,
+"value":2,"def":{"name":"count","required":true,"desc":"Number of iterations the query will run.","__use":1}},
+"interval":{"name":"interval","value":2,"def":{"name":"interval","required":true,
 "desc":"Delay in seconds betwen iterations.","__use":1}},"delimiter":{"name":"delimiter","value":";",
-"def":{"name":"delimiter","required":false,"desc":"CSV delimiter, the default value is ','.","__use":1}},"test":{"name":"test","value":null,"def":{"name":"test","required":false,
+"def":{"name":"delimiter","required":false,"desc":"CSV delimiter, the default value is ','.","__use":1}},
+"test":{"name":"test","value":null,"def":{"name":"test","required":false,
 "desc":"Test and be verbose, will run only one iteration of the query.","__use":1}}}
 
 * SQL query:
