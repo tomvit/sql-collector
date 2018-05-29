@@ -3,19 +3,21 @@
     This script runs in SQLcl, use sql-collector script to run it
 */
 
-var VERSION = "v1.0";
+var VERSION = "v1.1";
 
 // various java libraries used by this script 
 var Thread = Java.type("java.lang.Thread");
 var System = Java.type("java.lang.System");
 var Paths = Java.type("java.nio.file.Paths");
 var Files = Java.type("java.nio.file.Files");
+var Utils = Java.type("oracle.dbtools.db.DBUtil");
+var PrintWriter = Java.type("java.io.PrintWriter");
+var FileWriter = Java.type("java.io.FileWriter");
+var OutputStreamWriter = Java.type("java.io.OutputStreamWriter");
 
-function errorAndExit(text) {
-  print(text);
-  print("");
-  System.exit(1);  
-}
+// set error stream but does not really work!?
+var pw = new PrintWriter(new OutputStreamWriter(System.err, Java.type('java.nio.charset.StandardCharsets').UTF_8));
+sqlcl.getScriptRunnerContext().setErrWriter(pw);
 
 // get the sqlcDir - must be set as env variable
 var sqlcDir = System.getenv("sqlcDir");
@@ -23,6 +25,8 @@ if (!sqlcDir || sqlcDir === "")
   errorAndExit("The environment variable $sqlcDir has not been set! Are you running sql-collector script?");
 
 load(sqlcDir + "/libs/ArgumentsParser.js");
+
+var credentialsLockFile = sqlcDir + "/credlock";
 
 var programName = 
   "Oracle SQL query metric collector " + VERSION;
@@ -35,10 +39,14 @@ var optionDef = [
   { name: 'delimiter',          type: String,    required: false, desc : "CSV delimiter, the default value is ','." },
   { name: 'noHeaders',                           required: false, desc : "Headers will not be written to the output." },  
   { name: 'showSQLErrors',                       required: false, desc : "SQL errors will be written to the output." },  
+  { name: 'noCredlock',                          required: false, desc : "Do not use credentials locking." },                                  
   { name: '#([a-zA-Z0-9_\\-\\*\\+\\.]+)',
                                 type: String,    required: false, desc : "A regular expression to replace a string with a value in the query." }, 
   { name: 'test',                                required: false, desc : "Test and be verbose, will run only one iteration of the query." },
 ]
+
+// last error 
+var lastError;
 
 // clean arguments
 // when arguments are passed in sqljs, the first argument is the script name
@@ -46,15 +54,89 @@ var cmdargs = [];
 for (var i = 1; i < args.length; i++)
   cmdargs.push(args[i]);
 
-// helper functions
-function runSQL(statement) {
-  sqlcl.setStmt(statement); sqlcl.run();
+// *** helper functions
+
+function stringHash(s) {
+  var h = 0, l = s.length, i = 0;
+  if ( l > 0 )
+    while (i < l)
+      h = (h << 5) - h + s.charCodeAt(i++) | 0;
+  if (h < 0)
+    h = 0xFFFFFFFF + h + 1;
+  return h.toString(16);
 }
 
+function checkCredentialsNotLocked(connstr) {
+  if (Files.exists(Paths.get(credentialsLockFile))) {
+    var connstrHash = stringHash(connstr);
+    var lines = Files.readAllLines(Paths.get(credentialsLockFile), 
+      Java.type('java.nio.charset.StandardCharsets').UTF_8);  
+    for (var i = 0; i < lines.length; i++) {
+      if (connstrHash.matches(lines[i]))
+        errorAndExit("The credentials is locked. Check " + credentialsLockFile + ".")
+    }
+  }
+}
+
+function lockCredentials(connstr) {
+  var pw = new PrintWriter(new FileWriter(credentialsLockFile, true));
+  try {
+    pw.println(stringHash(connstr));
+  } finally {
+    pw.close();
+  } 
+}
+
+// print the error to the err output
+function printError(text) {
+  System.err.println(new Date() + ": " + text);
+}
+
+// print the error and exit
+function errorAndExit(text) {
+  printError(text);
+  System.exit(1);  
+}
+
+// this function will set and run SQL statement
+function runSQL(statement) {
+  lastError = null;
+  sqlcl.setStmt(statement); 
+  sqlcl.run();
+
+  // this will retrieve the error from the last SQL run or null if there was no error
+  // This is undocumented; I only determined this via sqlcl code decompiling and testing various options on the script runner context
+  // hope this will not change with future sqlcl releases!
+  lastError = sqlcl.getScriptRunnerContext().getProperty("sqldev.last.err.message.forsqlcode");
+}
+
+// checks an error and act accordingly such as exit when cannot login to the DB
+function checkError(errorText) {
+    if (errorText) { 
+      // invalid credentials
+      if (errorText.match(".*invalid username/password.*")) {
+        if (!argv.noCredlock) {
+          printError("sql-collector cannot connect to the DB and will lock the current credentials. " + 
+            "You will need to remove the lock manually if you want to use the same credentials again.\n"); 
+          lockCredentials(argv.connect.value);
+        }
+      }
+
+      // print error text and exit sql-collector 
+      errorAndExit(errorText);
+    }   
+}
+
+// returns SQL file as string
 function loadSQLTemplate(file) {
   var lines = Files.readAllLines(Paths.get(file), Java.type('java.nio.charset.StandardCharsets').UTF_8);  
   var s = ""; for (var i = 0; i < lines.length; i++) s += lines[i] + "\n";
   return s;
+}
+
+function runSQLIteration(iteration) {
+  runSQL("SET HEADING " + (iteration > 1 || argv.noHeaders ? "OFF" : "ON"));
+  runSQL(sql);
 }
 
 // main 
@@ -72,6 +154,10 @@ try {
       print(JSON.stringify(argv));
       print('');
     }
+
+    // check if the supplied connection string is not locked
+    if (!argv.noCredlock)
+      checkCredentialsNotLocked(argv.connect.value);
 
     if(!Files.exists(Paths.get(argv.query.value)))
         errorAndExit("The sql query file " + argv.query.value + " does not exist!");
@@ -91,11 +177,6 @@ try {
       print('');
     }
 
-    function runSQLIteration(iteration) {
-      runSQL("SET HEADING " + (iteration > 1 || argv.noHeaders ? "OFF" : "ON"));
-      runSQL(sql);
-    }
-
     // global SQL params
     runSQL("SET SQLBLANKLINES ON");
     runSQL("SET TRIMSPOOL ON");
@@ -110,22 +191,23 @@ try {
       runSQL("SET FEEDBACK OFF");
     }
 
-    if (argv.test) {
-      print("* Connecting to the DB...");
-    }
-
-    // connect to the DB
-    runSQL("CONNECT " + argv.connect.value);
-
     // run only once in the test mode
     if (argv.test) {
       print("* Running one iteration of the query...");
       argv.count.value = 1;
     }
 
-    // run SQL count times with interval bettwen runs
+    if (argv.test) {
+      print("* Connecting to the DB...");
+    }
+
+    runSQL("CONNECT " + argv.connect.value);
+    checkError(lastError);
+
+    // run SQL "count" times with "interval" bettwen runs
     for (var i = 0; i < argv.count.value; i++) {
       runSQLIteration(i + 1);
+      checkError(lastError);
 
       if (i < argv.count.value - 1)
         Thread.sleep(argv.interval.value * 1000);

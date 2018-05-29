@@ -22,6 +22,7 @@ Where:
    --interval                 Delay in seconds betwen iterations.
    --noHeaders                Headers will not be written to the output.
    --showSQLErrors            SQL errors will be written to the output.
+   --noCredlock               Do not lock credentials on a failed login attempt.
    --#([a-zA-Z0-9_\-\*\+\.]+) A regular expression to replace a string with a value in the query.
    --test                     Test and be verbose, will run only one iteration of the query.
 ```
@@ -82,6 +83,10 @@ where rownum <=1;
 "Gather Table's Index Statistics";28-MAR-18;"";3;3;"Indexes";0;"Gather Table's Index Statistics: Table INDPART$ : 3 out of 3 Indexes done"
 ```
 
+## Locking credentials on a failed login attempt
+
+sql-collector automatically locks credentials when a failed login attempt occurrs by adding the connection string to a local file ```credlock``` so 
+that the same credentials cannot be used again unless they are removed from the file. This is a protection mechanism against locking the user account in the DB when sql-collector would be running on regular time intervals. You can disable this behavior by setting ```noCredlock``` parameter.
 
 # License
 
