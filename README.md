@@ -22,7 +22,7 @@ Where:
    --interval                 Delay in seconds betwen iterations.
    --noHeaders                Headers will not be written to the output.
    --showSQLErrors            SQL errors will be written to the output.
-   --noCredlock               Do not use credentials locking..
+   --noCredlock               Do not use credentials locking.
    --#([a-zA-Z0-9_\-\*\+\.]+) A regular expression to replace a string with a value in the query.
    --test                     Test and be verbose, will run only one iteration of the query.
 ```
