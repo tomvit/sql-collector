@@ -212,9 +212,7 @@ var parseArgsAndHelp = function(programName, args, optionDefs) {
     } else
       return parseArgs(args, optionDef);
   } catch (e) {
-    print(e); 
-    print("");
-    showHelp();
+    System.err.println(new Date() + ": " + e); 
     return null;
   }
 }

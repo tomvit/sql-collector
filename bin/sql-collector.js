@@ -25,6 +25,7 @@ if (!sqlcDir || sqlcDir === "")
   errorAndExit("The environment variable $sqlcDir has not been set! Are you running sql-collector script?");
 
 load(sqlcDir + "/libs/ArgumentsParser.js");
+load(sqlcDir + "/libs/Utils.js");
 
 var credentialsLockFile = sqlcDir + "/credlock";
 
@@ -56,16 +57,8 @@ for (var i = 1; i < args.length; i++)
 
 // *** helper functions
 
-function stringHash(s) {
-  var h = 0, l = s.length, i = 0;
-  if ( l > 0 )
-    while (i < l)
-      h = (h << 5) - h + s.charCodeAt(i++) | 0;
-  if (h < 0)
-    h = 0xFFFFFFFF + h + 1;
-  return h.toString(16);
-}
-
+// checks whether credentials are locked. 
+// they will be locked when login fails
 function checkCredentialsNotLocked(connstr) {
   if (Files.exists(Paths.get(credentialsLockFile))) {
     var connstrHash = stringHash(connstr);
@@ -78,6 +71,7 @@ function checkCredentialsNotLocked(connstr) {
   }
 }
 
+// locks credentiails, i.e. writes credentials hash to a lock file
 function lockCredentials(connstr) {
   var pw = new PrintWriter(new FileWriter(credentialsLockFile, true));
   try {
@@ -85,17 +79,6 @@ function lockCredentials(connstr) {
   } finally {
     pw.close();
   } 
-}
-
-// print the error to the err output
-function printError(text) {
-  System.err.println(new Date() + ": " + text);
-}
-
-// print the error and exit
-function errorAndExit(text) {
-  printError(text);
-  System.exit(1);  
 }
 
 // this function will set and run SQL statement
