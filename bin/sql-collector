@@ -21,12 +21,12 @@ fi
 uid=$((1 + RANDOM % 1000))
 
 # use urandom if possible 
-if [ -f /dev/urandom ]; then
+if [ -e /dev/urandom ]; then
 	uid=$(cat /dev/urandom | tr -dc 'a-zA-Z0-9' | fold -w 8 | head -n 1);
 fi
 
 # create the tmp file
-tmpfile=".sql-executor-$uid.sql"
+tmpfile="$sqlcDir/.sql-executor-$uid.sql"
 echo "script $sqlcDir/sql-collector.js &1" >$tmpfile
 echo "exit" >>$tmpfile
 
