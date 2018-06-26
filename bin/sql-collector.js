@@ -21,8 +21,10 @@ sqlcl.getScriptRunnerContext().setErrWriter(pw);
 
 // get the sqlcDir - must be set as env variable
 var sqlcDir = System.getenv("sqlcDir");
-if (!sqlcDir || sqlcDir === "")
-  errorAndExit("The environment variable $sqlcDir has not been set! Are you running sql-collector script?");
+if (!sqlcDir || sqlcDir === "") {
+  System.err.println(new Date() + ": The environment variable $sqlcDir has not been set! Are you running sql-collector script?");
+  System.exit(1);
+}
 
 load(sqlcDir + "/libs/ArgumentsParser.js");
 load(sqlcDir + "/libs/Utils.js");
@@ -136,6 +138,14 @@ try {
       print("* Arguments parsed as JSON object:");
       print(JSON.stringify(argv));
       print('');
+    }
+
+    // check that value of --connect is a valid connection string
+    if (argv.connect && argv.connect.value) {
+      if (!argv.connect.value.match(/[a-zA-Z0-9]+\/.+@[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+:[a-zA-Z0-9_]+( as sysdba|sysoper)?/)) 
+        errorAndExit("The connection string is invalid!")
+    } else {
+      errorAndExit("The connection string has not been defined!")
     }
 
     // check if the supplied connection string is not locked
