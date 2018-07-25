@@ -142,8 +142,8 @@ try {
 
     // check that value of --connect is a valid connection string
     if (argv.connect && argv.connect.value) {
-      if (!argv.connect.value.match(/[a-zA-Z0-9]+\/.+@[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+:[a-zA-Z0-9_]+( as sysdba|sysoper)?/)) 
-        errorAndExit("The connection string is invalid!")
+      /*if (!argv.connect.value.match(/[a-zA-Z0-9]+\/.+@[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+:[0-9]+:[a-zA-Z0-9_]+( as sysdba|sysoper)?/)) 
+        errorAndExit("The connection string is invalid!")*/
     } else {
       errorAndExit("The connection string has not been defined!")
     }
