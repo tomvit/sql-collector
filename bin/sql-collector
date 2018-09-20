@@ -38,3 +38,4 @@ trap cleanup EXIT
 
 # run sqlcl
 sql -S /nolog @$tmpfile "$*"
+
