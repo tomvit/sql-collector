@@ -202,7 +202,7 @@ try {
       var start_t=new Date().valueOf();
       runSQLIteration(i + 1);
       checkError(lastError);
-      elapsed_s=new Data().valueOf()-start_t;
+      elapsed_s=new Date().valueOf()-start_t;
       
       if (i < argv.count.value - 1) {
         if (elapsed_s > argv.interval.value * 1000*0.75) {
