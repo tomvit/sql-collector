@@ -199,11 +199,19 @@ try {
 
     // run SQL "count" times with "interval" bettwen runs
     for (var i = 0; i < argv.count.value; i++) {
+      var start_t=new Date().valueOf();
       runSQLIteration(i + 1);
       checkError(lastError);
-
-      if (i < argv.count.value - 1)
-        Thread.sleep(argv.interval.value * 1000);
+      elapsed_s=new Data().valueOf()-start_t;
+      
+      if (i < argv.count.value - 1) {
+        if (elapsed_s > argv.interval.value * 1000*0.75) {
+          printError("It took " + elapsed_s/1000 + " seconds to retrieve the data which is more than 2/3 of the delay (" + 
+            argv.interval.value + " seconds). The time will not be adjusted");
+          Thread.sleep(argv.interval.value * 1000);
+        } else
+          Thread.sleep(argv.interval.value * 1000 - elapsed_s);
+      }        
     }
 
   }
